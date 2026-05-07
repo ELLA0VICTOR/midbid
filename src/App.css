@@ -3396,3 +3396,357 @@ html[data-theme="light"] .image-upload {
     min-height: 18rem;
   }
 }
+
+/* Mobile production pass */
+@media (max-width: 840px) {
+  .wrap {
+    width: 100%;
+    padding: 1rem clamp(0.85rem, 4vw, 1.25rem) 2.5rem;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .network-readout {
+    min-width: 0;
+  }
+
+  .network-readout span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px minmax(5rem, 0.42fr) minmax(5rem, 0.42fr);
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .wallet-menu,
+  .wallet-button,
+  .topbar-actions > button,
+  .theme-toggle {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .wallet-button {
+    max-width: none;
+  }
+
+  .wallet-dropdown {
+    left: 0;
+    right: auto;
+    width: min(calc(100vw - 2rem), 16rem);
+  }
+
+  .window-chrome {
+    width: 100%;
+    max-width: 17rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .hero-panel {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .brand-block {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .brand-block h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .account-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-bottom: 1px solid var(--border-visible);
+  }
+
+  .data-line,
+  .data-line + .data-line {
+    min-width: 0;
+    min-height: 4.25rem;
+    padding: 0.85rem 0.85rem 0.85rem 0;
+    border-left: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-line:nth-child(even) {
+    padding-left: 0.85rem;
+    border-left: 1px solid var(--border);
+  }
+
+  .auction-main-column {
+    display: grid;
+    gap: 1.4rem;
+    min-width: 0;
+  }
+
+  .auction-studio {
+    padding: 1.25rem 0;
+  }
+
+  .studio-heading,
+  .panel-heading,
+  .panel-heading.compact {
+    min-height: 0;
+    gap: 1rem;
+  }
+
+  .panel-heading h2,
+  .studio-heading h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .studio-create {
+    justify-self: stretch;
+  }
+
+  .created-auction-card {
+    padding: 0.9rem;
+  }
+
+  .created-auction-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auction-summary-actions {
+    gap: 0.75rem;
+  }
+
+  .auction-summary-actions .secondary-action {
+    width: 100%;
+  }
+
+  .modal-backdrop {
+    align-items: start;
+    padding: 0.65rem;
+    overflow-y: auto;
+  }
+
+  .auction-create-modal,
+  .bid-modal,
+  .settlement-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100svh - 1.3rem);
+  }
+
+  .modal-heading {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 1rem;
+    background-color: var(--surface);
+    background-image: var(--leather);
+  }
+
+  .auction-create-form {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .image-upload {
+    min-height: 14rem;
+  }
+
+  .modal-footer {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .bid-action-form,
+  .manual-candidate-form {
+    gap: 0.9rem;
+  }
+
+  .reveal-stage {
+    min-height: 15rem;
+  }
+
+  .winner-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .winner-meta {
+    min-height: 4.25rem;
+  }
+
+  .inbox-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
+    padding: 0.85rem 0;
+  }
+
+  .inbox-row button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .topbar-actions {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+
+  .topbar-actions > .topbar-action:not(.icon-only),
+  .topbar-actions > .theme-toggle {
+    grid-column: span 1;
+  }
+
+  .app-mark {
+    width: 64px;
+    height: 64px;
+    flex-basis: 64px;
+    border-radius: 16px;
+  }
+
+  .app-mark svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  .account-strip,
+  .created-auction-grid,
+  .winner-meta-grid,
+  .studio-metrics,
+  .commitment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .data-line,
+  .data-line + .data-line,
+  .data-line:nth-child(even) {
+    padding-left: 0;
+    padding-right: 0;
+    border-left: 0;
+  }
+
+  .created-auction-head {
+    grid-template-columns: 1fr;
+  }
+
+  .created-auction-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .created-auction-title h3 {
+    white-space: normal;
+  }
+
+  .created-auction-title p {
+    -webkit-line-clamp: 3;
+  }
+
+  .created-auction-countdown strong {
+    font-size: clamp(2.05rem, 12vw, 3.3rem);
+  }
+
+  .auction-card-cell {
+    min-height: 3.85rem;
+    padding: 0.75rem 0;
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+  }
+
+  html[data-theme="light"] .auction-card-cell {
+    background: transparent;
+  }
+
+  .modal-heading {
+    align-items: start;
+  }
+
+  .modal-close {
+    padding-top: 0.25rem;
+  }
+
+  .image-upload {
+    min-height: 12rem;
+  }
+
+  .winner-reveal-topline {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .winner-reveal-topline small {
+    text-align: left;
+  }
+
+  .winner-amount {
+    font-size: clamp(2.6rem, 18vw, 4.2rem);
+  }
+
+  .toast {
+    right: 0.65rem;
+    bottom: 0.65rem;
+    width: calc(100% - 1.3rem);
+    align-items: start;
+  }
+
+  .operation-modal {
+    padding: 0.75rem;
+  }
+
+  .operation-box {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}
+
+@media (max-width: 400px) {
+  .wrap {
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
+  }
+
+  .topbar-actions {
+    grid-template-columns: 1fr 40px;
+    gap: 0.4rem;
+  }
+
+  .topbar-action,
+  .theme-toggle {
+    min-height: 38px;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.66rem;
+  }
+
+  .topbar-action.icon-only {
+    width: 40px;
+  }
+
+  .brand-block {
+    grid-template-columns: 1fr;
+  }
+
+  .created-auction-card,
+  .winner-reveal-card {
+    padding: 0.75rem;
+  }
+
+  .auction-tabs button {
+    padding: 0 0.55rem;
+  }
+}
