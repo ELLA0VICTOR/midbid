@@ -169,25 +169,40 @@ function App() {
     recipient: activeAuction?.settlementAccount || '',
   })
   const auctionClosed = activeAuction ? isAuctionClosed(activeAuction.endsAt, clock) : false
+  const bidderIsCreator = activeAuction ? isAuctionCreator(activeAuction, miden.account.id) : false
+  const encryptedReceiptReady =
+    !activeAuction || activeAuction.syncStatus !== 'global' || Boolean(activeAuction.bidPublicKey)
   const preflightItems = [
     { label: 'Auction created', ok: Boolean(activeAuction) },
     ...preflight.items,
+    { label: 'Bidder is not creator', ok: !bidderIsCreator },
+    { label: 'Encrypted receipt key', ok: encryptedReceiptReady },
     { label: 'Auction is pending', ok: !auctionClosed },
   ]
   const bidPreflightReady = preflightItems.every((item) => item.ok)
   const bidPreflight = {
     items: preflightItems,
     ready: bidPreflightReady,
-    summary: !activeAuction
-      ? 'Create an auction first.'
-      : auctionClosed
-        ? 'Auction closed. Bids are disabled.'
-        : 'Resolve blocked checks',
+    summary: getBidPreflightSummary({
+      activeAuction,
+      auctionClosed,
+      bidderIsCreator,
+      encryptedReceiptReady,
+      isConnected: miden.isConnected,
+      preflight,
+    }),
   }
 
   async function handleSubmitBid(event) {
     event.preventDefault()
-    if (!bidAmount || !activeAuction?.settlementAccount || auctionClosed) return
+    if (!bidAmount || !activeAuction?.settlementAccount || auctionClosed || !bidPreflight.ready) {
+      setGlobalState({
+        mode: isSupabaseConfigured() ? 'global' : 'local',
+        message: bidPreflight.summary,
+        status: 'warning',
+      })
+      return
+    }
 
     const bidSeal = await createBidSeal({
       amount: bidAmount,
@@ -268,12 +283,21 @@ function App() {
       return false
     }
 
-    const winner = revealHighestBid(activeAuction, miden.notes)
+    const refreshedAuction = await loadEncryptedBidReceipts(activeAuction)
+    const auctionForReveal = refreshedAuction || activeAuction
+    const winner = revealHighestBid(auctionForReveal, miden.notes)
 
-    if (!winner) return false
+    if (!winner) {
+      setGlobalState({
+        mode: isSupabaseConfigured() ? 'global' : 'local',
+        message: 'No valid external bid candidates found. Creator self-bids are ignored.',
+        status: 'warning',
+      })
+      return false
+    }
 
     let revealedAuction = {
-      ...activeAuction,
+      ...auctionForReveal,
       revealedAt: winner.revealedAt,
       status: 'revealed',
       updatedAt: winner.revealedAt,
@@ -313,7 +337,7 @@ function App() {
 
     setAuctions((items) =>
       items.map((item) =>
-        item.id === activeAuction.id
+        item.id === auctionForReveal.id
           ? preserveLocalAuctionData(item, revealedAuction)
           : item,
       ),
@@ -348,10 +372,11 @@ function App() {
   }
 
   async function loadEncryptedBidReceipts(auction) {
-    if (!isSupabaseConfigured() || !auction?.bidPrivateKey) return
+    if (!isSupabaseConfigured() || !auction?.bidPrivateKey) return null
 
     try {
       const receipts = await fetchGlobalBidReceipts(auction.id)
+      const baseAuction = auctions.find((item) => item.id === auction.id) || auction
       const decryptedCandidates = (
         await Promise.all(
           receipts.map(async (receipt) => {
@@ -364,6 +389,7 @@ function App() {
                   asset: payload.asset || 'MIDEN',
                   from: payload.bidder || 'private bidder',
                   id: receipt.id,
+                  source: 'encrypted receipt',
                 },
                 payload.txId || receipt.id,
               )
@@ -374,7 +400,16 @@ function App() {
         )
       ).filter(Boolean)
 
-      if (decryptedCandidates.length === 0) return
+      if (decryptedCandidates.length === 0) return baseAuction
+
+      const nextCandidates = decryptedCandidates.reduce(
+        (candidates, candidate) => addSettlementCandidate(candidates, candidate),
+        baseAuction.settlementCandidates || [],
+      )
+      const nextAuction = {
+        ...baseAuction,
+        settlementCandidates: nextCandidates,
+      }
 
       setAuctions((items) =>
         items.map((item) =>
@@ -389,12 +424,15 @@ function App() {
             : item,
         ),
       )
+
+      return nextAuction
     } catch (error) {
       setGlobalState({
         mode: 'global',
         message: `Could not load encrypted bid receipts: ${getErrorMessage(error)}`,
         status: 'warning',
       })
+      return null
     }
   }
 
@@ -620,7 +658,7 @@ function App() {
           asset={miden.account.asset}
           assetOptions={miden.assetOptions}
           assetValue={miden.selectedAssetId}
-          disabled={!miden.isConnected || !activeAuction || auctionClosed}
+          disabled={!bidPreflight.ready || !activeAuction || auctionClosed}
           hasAuction={Boolean(activeAuction)}
           isClosed={auctionClosed}
           isSending={miden.isBusy}
@@ -699,7 +737,7 @@ function revealHighestBid(auction, notes) {
       asset: candidate.asset || 'MIDEN',
       bidder: candidate.bidder || 'private bidder',
       reference: candidate.reference || candidate.txId || candidate.noteId || candidate.id,
-      source: 'claimed private note',
+      source: candidate.source || 'claimed private note',
     })),
     ...notes.map((note) => ({
       amount: note.amount,
@@ -710,6 +748,7 @@ function revealHighestBid(auction, notes) {
     })),
   ]
     .filter((candidate) => candidate.amount)
+    .filter((candidate) => !isSelfBidCandidate(auction, candidate))
     .map((candidate) => ({
       ...candidate,
       amountBaseUnits: parseMidenAmount(candidate.amount),
@@ -760,7 +799,7 @@ function createSettlementCandidate(note, txId) {
     id: `claim_${note.id || Date.now().toString(16)}`,
     noteId: note.id || '',
     reference: txId || note.id || '',
-    source: 'claimed private note',
+    source: note.source || 'claimed private note',
     txId: txId || '',
   }
 }
@@ -783,6 +822,14 @@ function isAuctionCreator(auction, accountId) {
   return Boolean(creator && actor && creator === actor)
 }
 
+function isSelfBidCandidate(auction, candidate) {
+  const bidder = normalizeAccountId(candidate?.bidder)
+  const creator = normalizeAccountId(auction?.creatorAccount || auction?.settlementAccount)
+  const settlement = normalizeAccountId(auction?.settlementAccount)
+
+  return Boolean(bidder && (bidder === creator || bidder === settlement))
+}
+
 function isLikelyMidenAccount(value) {
   const accountId = String(value || '').trim()
 
@@ -794,6 +841,24 @@ function isLikelyMidenAccount(value) {
 
 function normalizeAccountId(value) {
   return String(value || '').trim().toLowerCase()
+}
+
+function getBidPreflightSummary({
+  activeAuction,
+  auctionClosed,
+  bidderIsCreator,
+  encryptedReceiptReady,
+  isConnected,
+  preflight,
+}) {
+  if (!activeAuction) return 'Create an auction first.'
+  if (!isConnected) return 'Connect a bidder wallet.'
+  if (auctionClosed) return 'Auction closed. Bids are disabled.'
+  if (bidderIsCreator) return 'Creators cannot bid in their own auction.'
+  if (!encryptedReceiptReady) return 'Auction is missing its encrypted bid receipt key.'
+  if (!preflight.ready) return preflight.summary
+
+  return 'Ready for wallet approval'
 }
 
 function createInitialGlobalState() {

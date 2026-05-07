@@ -4,8 +4,13 @@ import { formatAuctionDeadline, shorten } from '../lib/formatUtils'
 
 export function SettlementPanel({ auction, globalState, isClosed, notes, onRevealWinner }) {
   const hasResult = Boolean(auction?.winner)
-  const claimedCount = auction?.settlementCandidates?.length || 0
-  const visibleCount = notes.length
+  const revealCandidates = (auction?.settlementCandidates || []).filter(
+    (candidate) => !isSelfBidCandidate(auction, candidate?.bidder),
+  )
+  const ignoredSelfBidCount = (auction?.settlementCandidates?.length || 0) - revealCandidates.length
+  const visibleNotes = notes.filter((note) => !isSelfBidCandidate(auction, note?.from))
+  const claimedCount = revealCandidates.length
+  const visibleCount = visibleNotes.length
   const totalCandidateCount = claimedCount + visibleCount
   const disabled = !auction || !isClosed || totalCandidateCount === 0
   const [revealState, setRevealState] = useState({ auctionId: '', phase: 'idle' })
@@ -13,8 +18,11 @@ export function SettlementPanel({ auction, globalState, isClosed, notes, onRevea
   const winnerReference = hasResult ? shorten(auction.winner.reference) : ''
   const syncLabel = getWinnerSyncLabel(auction, globalState)
   const candidateLabel = useMemo(
-    () => `${claimedCount} sealed ${claimedCount === 1 ? 'receipt' : 'receipts'} / ${visibleCount} visible notes`,
-    [claimedCount, visibleCount],
+    () =>
+      `${claimedCount} sealed ${claimedCount === 1 ? 'receipt' : 'receipts'} / ${visibleCount} visible notes${
+        ignoredSelfBidCount ? ` / ${ignoredSelfBidCount} self ignored` : ''
+      }`,
+    [claimedCount, ignoredSelfBidCount, visibleCount],
   )
   const storedPhase = revealState.auctionId === auction?.id ? revealState.phase : ''
   const phase = storedPhase === 'revealing' ? 'revealing' : hasResult ? 'revealed' : storedPhase || 'idle'
@@ -99,13 +107,13 @@ export function SettlementPanel({ auction, globalState, isClosed, notes, onRevea
         <span>Settlement candidates</span>
         <strong>{totalCandidateCount}</strong>
         <small>
-          {claimedCount} claimed / {visibleCount} visible
+          {claimedCount} claimed / {visibleCount} visible{ignoredSelfBidCount ? ` / ${ignoredSelfBidCount} self ignored` : ''}
         </small>
       </div>
 
       {claimedCount > 0 && (
         <div className="candidate-list" aria-label="Claimed settlement candidates">
-          {auction.settlementCandidates.slice(0, 4).map((candidate) => (
+          {revealCandidates.slice(0, 4).map((candidate) => (
             <div className="candidate-row" key={candidate.id}>
               <span>{candidate.source || 'claimed private note'}</span>
               <strong>
@@ -139,7 +147,7 @@ function getSettlementNote(auction, globalState) {
   if (auction.winner && auction.syncStatus === 'global') return 'Result is synced for every MidBid visitor.'
   if (!auction.editToken) return 'Only the creator browser can publish the global reveal.'
 
-  return 'Encrypted bid receipts load for the creator browser. Manual entry is only for wallet activity already received outside the inbox.'
+  return 'Encrypted bid receipts load for the creator browser. Creator self-bids are ignored during reveal.'
 }
 
 function getWinnerSyncLabel(auction, globalState) {
@@ -148,4 +156,16 @@ function getWinnerSyncLabel(auction, globalState) {
   if (globalState?.mode === 'global' && globalState?.status === 'error') return 'Saved locally'
 
   return 'Local reveal'
+}
+
+function isSelfBidCandidate(auction, bidderValue) {
+  const bidder = normalizeAccountId(bidderValue)
+  const creator = normalizeAccountId(auction?.creatorAccount || auction?.settlementAccount)
+  const settlement = normalizeAccountId(auction?.settlementAccount)
+
+  return Boolean(bidder && (bidder === creator || bidder === settlement))
+}
+
+function normalizeAccountId(value) {
+  return String(value || '').trim().toLowerCase()
 }

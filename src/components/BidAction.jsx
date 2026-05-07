@@ -15,6 +15,8 @@ export function BidAction({
   onAssetChange,
   onSubmitBid,
 }) {
+  const buttonLabel = getSubmitLabel({ disabled, hasAuction, isClosed, isSending, preflight })
+
   return (
     <section className="panel bid-action" aria-labelledby="bid-action-title">
       <div className="panel-heading compact">
@@ -49,21 +51,23 @@ export function BidAction({
 
         <button className="primary-action" type="submit" disabled={disabled || isSending}>
           <IconBid />
-          <span>
-            {!hasAuction
-              ? 'Create auction'
-              : isClosed
-                ? 'Auction closed'
-                : disabled
-                  ? 'Connect wallet'
-                  : isSending
-                    ? 'Proving'
-                    : 'Submit bid'}
-          </span>
+          <span>{buttonLabel}</span>
         </button>
       </form>
     </section>
   )
+}
+
+function getSubmitLabel({ disabled, hasAuction, isClosed, isSending, preflight }) {
+  if (!hasAuction) return 'Create auction'
+  if (isClosed) return 'Auction closed'
+  if (isSending) return 'Proving'
+  if (disabled && preflight?.items?.some((item) => item.label === 'Wallet connected' && !item.ok)) {
+    return 'Connect wallet'
+  }
+  if (disabled) return 'Cannot bid'
+
+  return 'Submit bid'
 }
 
 function getOptionValue(option) {
