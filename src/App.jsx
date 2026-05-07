@@ -40,7 +40,6 @@ function App() {
   const [bidAmount, setBidAmount] = useState('')
   const [bidModalOpen, setBidModalOpen] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [manualCandidateAmount, setManualCandidateAmount] = useState('')
   const [settlementModalOpen, setSettlementModalOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [globalState, setGlobalState] = useState(createInitialGlobalState)
@@ -348,33 +347,6 @@ function App() {
     )
   }
 
-  function handleAddManualCandidate(event) {
-    event.preventDefault()
-    if (!activeAuction || !manualCandidateAmount.trim()) return
-
-    const candidate = createSettlementCandidate(
-      {
-        amount: manualCandidateAmount,
-        asset: miden.account.asset || 'MIDEN',
-        from: 'creator recorded bid',
-        id: `manual_${Date.now().toString(16)}`,
-      },
-      '',
-    )
-
-    setAuctions((items) =>
-      items.map((item) =>
-        item.id === activeAuction.id
-          ? {
-              ...item,
-              settlementCandidates: addSettlementCandidate(item.settlementCandidates, candidate),
-            }
-          : item,
-      ),
-    )
-    setManualCandidateAmount('')
-  }
-
   async function loadEncryptedBidReceipts(auction) {
     if (!isSupabaseConfigured() || !auction?.bidPrivateKey) return
 
@@ -665,10 +637,7 @@ function App() {
           globalState={globalState}
           isBusy={miden.isBusy}
           isClosed={auctionClosed}
-          manualAmount={manualCandidateAmount}
           notes={miden.notes}
-          onAddManualCandidate={handleAddManualCandidate}
-          onManualAmountChange={setManualCandidateAmount}
           onClose={() => setSettlementModalOpen(false)}
           onConsume={handleConsumeBidNote}
           onRevealWinner={handleRevealWinner}

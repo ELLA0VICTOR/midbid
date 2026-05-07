@@ -2606,14 +2606,6 @@ html[data-theme="light"] .auction-card-cell {
   gap: 1.5rem;
 }
 
-.manual-candidate-form {
-  display: grid;
-  gap: 0.85rem;
-  padding: 1rem 0;
-  border-top: 1px solid var(--border-visible);
-  border-bottom: 1px solid var(--border-visible);
-}
-
 .bid-modal .bid-action,
 .settlement-modal .settlement-panel,
 .settlement-modal .private-inbox {
@@ -3580,8 +3572,7 @@ html[data-theme="light"] .image-upload {
     gap: 0.8rem;
   }
 
-  .bid-action-form,
-  .manual-candidate-form {
+  .bid-action-form {
     gap: 0.9rem;
   }
 

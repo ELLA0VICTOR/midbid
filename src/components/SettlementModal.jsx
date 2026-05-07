@@ -6,12 +6,9 @@ export function SettlementModal({
   globalState,
   isBusy,
   isClosed,
-  manualAmount,
   notes,
-  onAddManualCandidate,
   onClose,
   onConsume,
-  onManualAmountChange,
   onRevealWinner,
 }) {
   return (
@@ -40,20 +37,6 @@ export function SettlementModal({
             notes={notes}
             onRevealWinner={onRevealWinner}
           />
-          <form className="manual-candidate-form" onSubmit={onAddManualCandidate}>
-            <label className="field">
-              <span>Record received bid</span>
-              <input
-                inputMode="decimal"
-                placeholder="10"
-                value={manualAmount}
-                onChange={(event) => onManualAmountChange(event.target.value)}
-              />
-            </label>
-            <button className="secondary-action" type="submit" disabled={isBusy || !manualAmount?.trim()}>
-              Add settlement candidate
-            </button>
-          </form>
           <PrivateInbox isBusy={isBusy} notes={notes} onConsume={onConsume} />
         </div>
       </section>
