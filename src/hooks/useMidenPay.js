@@ -613,7 +613,11 @@ export function useMidenPay() {
 }
 
 function openFaucetWindow() {
-  globalThis.window?.open?.(faucetUrl, '_blank', 'noopener,noreferrer')
+  const openedWindow = globalThis.window?.open?.(faucetUrl, '_blank', 'noopener,noreferrer')
+
+  if (!openedWindow) {
+    globalThis.window?.location?.assign?.(faucetUrl)
+  }
 }
 
 function buildActivity({ amount, id, peer, status, type }) {

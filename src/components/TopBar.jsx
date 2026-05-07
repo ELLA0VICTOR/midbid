@@ -108,7 +108,7 @@ export function TopBar({
         >
           <IconRefresh />
         </button>
-        <button className="topbar-action" type="button" disabled={!isConnected} onClick={onFund}>
+        <button className="topbar-action" type="button" disabled={isBusy} onClick={onFund}>
           Faucet
         </button>
         <button className="theme-toggle" type="button" onClick={onToggleTheme}>

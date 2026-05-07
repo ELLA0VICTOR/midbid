@@ -133,6 +133,14 @@ function App() {
 
   const connectedSettlementAccount =
     miden.isConnected && miden.account.id !== 'connect extension' ? miden.account.id : ''
+  const hasCreatorWallet = isLikelyMidenAccount(connectedSettlementAccount)
+
+  useEffect(() => {
+    if (createModalOpen && !hasCreatorWallet) {
+      setCreateModalOpen(false)
+    }
+  }, [createModalOpen, hasCreatorWallet])
+
   const selectedAuction = useMemo(
     () => auctions.find((item) => item.id === activeAuctionId) || auctions[0] || null,
     [activeAuctionId, auctions],
@@ -508,7 +516,22 @@ function App() {
     setBidModalOpen(true)
   }
 
+  async function handleOpenCreateAuction() {
+    if (!hasCreatorWallet) {
+      await miden.connect()
+      return
+    }
+
+    setCreateModalOpen(true)
+  }
+
   async function handleCreateAuction(form) {
+    if (!hasCreatorWallet) {
+      setCreateModalOpen(false)
+      await miden.connect()
+      return null
+    }
+
     const bidKeys = await generateBidKeyPair()
     let nextAuction = await createAuctionRecord({
       ...form,
@@ -582,7 +605,9 @@ function App() {
         <main className="workspace auction-workspace" id="main">
           <section className="auction-main-column">
             <AuctionStudio
-              onOpenCreate={() => setCreateModalOpen(true)}
+              canCreate={hasCreatorWallet}
+              isBusy={miden.isBusy}
+              onOpenCreate={handleOpenCreateAuction}
             />
 
             <AuctionSummary
@@ -612,7 +637,7 @@ function App() {
         <AuctionCreateModal
           connectedAccount={connectedSettlementAccount}
           isBusy={miden.isBusy}
-          isConnected={miden.isConnected}
+          isConnected={hasCreatorWallet}
           onClose={() => setCreateModalOpen(false)}
           onCreate={handleCreateAuction}
         />
@@ -787,6 +812,15 @@ function isAuctionCreator(auction, accountId) {
   const actor = normalizeAccountId(accountId)
 
   return Boolean(creator && actor && creator === actor)
+}
+
+function isLikelyMidenAccount(value) {
+  const accountId = String(value || '').trim()
+
+  if (accountId.length < 12 || /\s/.test(accountId)) return false
+  if (/^0x[0-9a-f]+$/i.test(accountId)) return accountId.length >= 16
+
+  return /^m[a-z0-9_]{10,}$/i.test(accountId)
 }
 
 function normalizeAccountId(value) {
