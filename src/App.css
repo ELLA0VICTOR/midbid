@@ -3437,6 +3437,17 @@ html[data-theme="light"] .image-upload {
     width: 100%;
   }
 
+  .topbar-action,
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .wallet-button {
     max-width: none;
   }
@@ -3597,6 +3608,42 @@ html[data-theme="light"] .image-upload {
   }
 }
 
+@media (max-width: 640px) {
+  .topbar-actions {
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .wallet-menu {
+    grid-column: 1 / -1;
+  }
+
+  .topbar-action.icon-only {
+    grid-column: 1;
+    width: 44px;
+    min-width: 44px;
+  }
+
+  .topbar-actions > .topbar-action:not(.icon-only) {
+    grid-column: 2;
+  }
+
+  .topbar-actions > .theme-toggle {
+    grid-column: 3;
+  }
+
+  .topbar-actions > .topbar-action:not(.icon-only),
+  .topbar-actions > .theme-toggle {
+    min-height: 42px;
+    padding-inline: 0.65rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.045em;
+  }
+
+  .wallet-dropdown {
+    width: 100%;
+  }
+}
+
 @media (max-width: 560px) {
   input,
   select,
@@ -3605,12 +3652,7 @@ html[data-theme="light"] .image-upload {
   }
 
   .topbar-actions {
-    grid-template-columns: minmax(0, 1fr) 44px;
-  }
-
-  .topbar-actions > .topbar-action:not(.icon-only),
-  .topbar-actions > .theme-toggle {
-    grid-column: span 1;
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .app-mark {
@@ -3722,19 +3764,21 @@ html[data-theme="light"] .image-upload {
   }
 
   .topbar-actions {
-    grid-template-columns: 1fr 40px;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.4rem;
   }
 
   .topbar-action,
   .theme-toggle {
-    min-height: 38px;
-    padding: 0.35rem 0.55rem;
-    font-size: 0.66rem;
+    min-height: 40px;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.035em;
   }
 
   .topbar-action.icon-only {
     width: 40px;
+    min-width: 40px;
   }
 
   .brand-block {
